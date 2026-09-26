@@ -1,0 +1,32 @@
+name: Res 1104 - precios por estacion (filtrado)
+
+on:
+  schedule:
+    - cron: "0 6 * * *"   # todos los días 06:00 UTC = 03:00 Argentina
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  filtrar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Descargar y filtrar
+        env:
+          URL_CSV: http://datos.energia.gob.ar/dataset/708f9ab4-829b-4f02-b507-f303c5bc4800/resource/3cbdd364-a12c-46b7-b791-dd8e8bcfb32d/download/precios-eess-2025-.csv
+          LOCALIDAD: BAHIA BLANCA
+          CANAL: Al público
+          SALIDA: data/res1104_bahia.csv
+        run: python scripts/filtrar_res1104.py
+      - name: Guardar si cambió
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add data/res1104_bahia.csv
+          git diff --cached --quiet || git commit -m "Res 1104: actualización $(date -u +%Y-%m-%d)"
+          git push
